@@ -18,15 +18,23 @@ public class GraphPanel extends JPanel {
     private boolean selectingEdge = false;
     private final Random rand = new Random();
 
+    private int draggedVertexIndex = -1;
+
     public GraphPanel() {
         setBackground(Color.WHITE);
 
+        // Mouse listener pour cliquer
         addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 if (currentMode == Mode.VERTEX) {
-                    vertices.add(e.getPoint());
-                    colors.add(new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)));
-                    repaint();
+                    int index = getVertexAt(e.getPoint());
+                    if (index != -1) {
+                        draggedVertexIndex = index; // commencer le déplacement
+                    } else {
+                        vertices.add(e.getPoint());
+                        colors.add(new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)));
+                        repaint();
+                    }
                 } else if (currentMode == Mode.EDGE) {
                     int clicked = getVertexAt(e.getPoint());
                     if (clicked != -1) {
@@ -40,6 +48,20 @@ public class GraphPanel extends JPanel {
                             repaint();
                         }
                     }
+                }
+            }
+
+            public void mouseReleased(MouseEvent e) {
+                draggedVertexIndex = -1; // arrêter le déplacement
+            }
+        });
+
+        // Mouse motion listener pour glisser
+        addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                if (currentMode == Mode.VERTEX && draggedVertexIndex != -1) {
+                    vertices.set(draggedVertexIndex, e.getPoint());
+                    repaint();
                 }
             }
         });
