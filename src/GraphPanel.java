@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -14,7 +16,7 @@ public class GraphPanel extends JPanel {
     private final ArrayList<Color> colors = new ArrayList<>();
     private final ArrayList<Edge> edges = new ArrayList<>();
 
-    private int[] edgeInProgress = new int[2];
+    private final int[] edgeInProgress = new int[2];
     private boolean selectingEdge = false;
     private final Random rand = new Random();
 
@@ -23,19 +25,28 @@ public class GraphPanel extends JPanel {
     public GraphPanel() {
         setBackground(Color.WHITE);
 
-        // Mouse listener pour cliquer
-        addMouseListener(new MouseAdapter() {
+        MouseAdapter adapter = new MouseAdapter() {
+            @Override
             public void mousePressed(MouseEvent e) {
                 if (currentMode == Mode.VERTEX) {
                     int index = getVertexAt(e.getPoint());
                     if (index != -1) {
-                        draggedVertexIndex = index; // commencer le déplacement
+                        draggedVertexIndex = index;
                     } else {
                         vertices.add(e.getPoint());
                         colors.add(new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)));
                         repaint();
                     }
                 } else if (currentMode == Mode.EDGE) {
+                    // D'abord, vérifier si une arête est cliquée
+                    int edgeIndex = getEdgeAt(e.getPoint());
+                    if (edgeIndex != -1) {
+                        edges.remove(edgeIndex);
+                        repaint();
+                        return;
+                    }
+
+                    // Sinon, gérer création d’arête
                     int clicked = getVertexAt(e.getPoint());
                     if (clicked != -1) {
                         if (!selectingEdge) {
@@ -51,20 +62,22 @@ public class GraphPanel extends JPanel {
                 }
             }
 
+            @Override
             public void mouseReleased(MouseEvent e) {
-                draggedVertexIndex = -1; // arrêter le déplacement
+                draggedVertexIndex = -1;
             }
-        });
 
-        // Mouse motion listener pour glisser
-        addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
             public void mouseDragged(MouseEvent e) {
                 if (currentMode == Mode.VERTEX && draggedVertexIndex != -1) {
                     vertices.set(draggedVertexIndex, e.getPoint());
                     repaint();
                 }
             }
-        });
+        };
+
+        addMouseListener(adapter);
+        addMouseMotionListener(adapter);
     }
 
     public void setMode(Mode mode) {
@@ -73,8 +86,20 @@ public class GraphPanel extends JPanel {
 
     private int getVertexAt(Point p) {
         for (int i = 0; i < vertices.size(); i++) {
-            Point v = vertices.get(i);
-            if (p.distance(v) < 15) return i;
+            if (p.distance(vertices.get(i)) < 15) return i;
+        }
+        return -1;
+    }
+
+    private int getEdgeAt(Point p) {
+        for (int i = 0; i < edges.size(); i++) {
+            Point p1 = vertices.get(edges.get(i).a);
+            Point p2 = vertices.get(edges.get(i).b);
+            Point2D.Double a = new Point2D.Double(p1.x, p1.y);
+            Point2D.Double b = new Point2D.Double(p2.x, p2.y);
+            double dist = a.distance(b) == 0 ? p.distance(a) :
+                    Line2D.ptSegDist(a.x, a.y, b.x, b.y, p.x, p.y);
+            if (dist < 5.0) return i;
         }
         return -1;
     }
@@ -94,16 +119,19 @@ public class GraphPanel extends JPanel {
         }
     }
 
+    @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        // draw edges
+
+        // Draw edges
         g.setColor(Color.GRAY);
         for (Edge e : edges) {
             Point p1 = vertices.get(e.a);
             Point p2 = vertices.get(e.b);
             g.drawLine(p1.x, p1.y, p2.x, p2.y);
         }
-        // draw vertices
+
+        // Draw vertices
         for (int i = 0; i < vertices.size(); i++) {
             g.setColor(colors.get(i));
             Point p = vertices.get(i);
