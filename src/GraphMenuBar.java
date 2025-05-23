@@ -4,6 +4,12 @@ public class GraphMenuBar extends JMenuBar {
     public GraphMenuBar(GraphPanel panel) {
         JMenu fileMenu = new JMenu("File");
         JMenuItem savePositions = new JMenuItem("Save Positions");
+        JMenuItem saveGraph = new JMenuItem("Save Graph");
+        JMenuItem newGraph = new JMenuItem("New");
+        newGraph.addActionListener(e -> panel.promptBeforeReset());
+        fileMenu.add(newGraph);
+        saveGraph.addActionListener(e -> panel.saveGraphAsDot());
+        fileMenu.add(saveGraph);
         savePositions.addActionListener(e -> panel.savePositions());
         fileMenu.add(savePositions);
 

@@ -146,4 +146,54 @@ public class GraphPanel extends JPanel {
             this.b = b;
         }
     }
+
+    public void saveGraphAsDot() {
+        if (vertices.isEmpty()) return;
+
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
+            try (FileWriter writer = new FileWriter(chooser.getSelectedFile())) {
+                writer.write("graph G {\n");
+
+                // écrire tous les sommets (numérotés)
+                for (int i = 0; i < vertices.size(); i++) {
+                    writer.write("  " + i + ";\n");
+                }
+
+                // écrire toutes les arêtes
+                for (Edge e : edges) {
+                    writer.write("  " + e.a + " -- " + e.b + ";\n");
+                }
+
+                writer.write("}\n");
+                JOptionPane.showMessageDialog(this, "Graphe sauvegardé au format DOT.");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Erreur : " + ex.getMessage());
+            }
+        }
+    }
+
+    public void clearGraph() {
+        vertices.clear();
+        colors.clear();
+        edges.clear();
+        selectingEdge = false;
+        repaint();
+    }
+    public void promptBeforeReset() {
+        int response = JOptionPane.showConfirmDialog(this,
+                "Souhaitez-vous sauvegarder le graphe actuel avant de créer un nouveau ?",
+                "Nouveau graphe",
+                JOptionPane.YES_NO_CANCEL_OPTION);
+
+        if (response == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+        if (response == JOptionPane.YES_OPTION) {
+            saveGraphAsDot(); // méthode déjà créée
+        }
+        clearGraph();
+    }
+
+
 }
