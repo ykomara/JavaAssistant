@@ -194,6 +194,57 @@ public class GraphPanel extends JPanel {
         }
         clearGraph();
     }
+    public void openGraphFromDot() {
+        JFileChooser chooser = new JFileChooser();
+        if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        try {
+            java.util.List<String> lines = java.nio.file.Files.readAllLines(chooser.getSelectedFile().toPath());
+            ArrayList<Point> newVertices = new ArrayList<>();
+            ArrayList<Color> newColors = new ArrayList<>();
+            ArrayList<Edge> newEdges = new ArrayList<>();
+
+            int maxId = -1;
+            for (String line : lines) {
+                line = line.trim();
+                if (line.matches("\\d+;")) {
+                    int id = Integer.parseInt(line.replace(";", ""));
+                    maxId = Math.max(maxId, id);
+                }
+            }
+
+            // Générer les positions aléatoires des sommets
+            for (int i = 0; i <= maxId; i++) {
+                int x = rand.nextInt(getWidth() - 40) + 20;
+                int y = rand.nextInt(getHeight() - 40) + 20;
+                newVertices.add(new Point(x, y));
+                newColors.add(new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)));
+            }
+
+            // Lire les arêtes
+            for (String line : lines) {
+                line = line.trim();
+                if (line.matches("\\d+ -- \\d+;")) {
+                    String[] parts = line.replace(";", "").split(" -- ");
+                    int a = Integer.parseInt(parts[0]);
+                    int b = Integer.parseInt(parts[1]);
+                    newEdges.add(new Edge(a, b));
+                }
+            }
+
+            // Mise à jour du graphe
+            this.vertices.clear();
+            this.vertices.addAll(newVertices);
+            this.colors.clear();
+            this.colors.addAll(newColors);
+            this.edges.clear();
+            this.edges.addAll(newEdges);
+            repaint();
+
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Erreur lors de l'ouverture du fichier : " + e.getMessage());
+        }
+    }
 
 
 }

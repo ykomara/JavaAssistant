@@ -9,6 +9,10 @@ public class GraphMenuBar extends JMenuBar {
         newGraph.addActionListener(e -> panel.promptBeforeReset());
         fileMenu.add(newGraph);
         saveGraph.addActionListener(e -> panel.saveGraphAsDot());
+        JMenuItem openGraph = new JMenuItem("Open Graph");
+        openGraph.addActionListener(e -> panel.openGraphFromDot());
+        fileMenu.add(openGraph);
+
         fileMenu.add(saveGraph);
         savePositions.addActionListener(e -> panel.savePositions());
         fileMenu.add(savePositions);
